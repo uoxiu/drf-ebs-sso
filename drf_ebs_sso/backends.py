@@ -3,19 +3,24 @@ from django.db.models import Model
 from rest_framework.authentication import BaseAuthentication
 
 from .helpers import get_token, get_sso_user
+from django.conf import settings
+from django.utils.module_loading import import_string
+
+mongoengine_document = getattr(settings, 'AUTH_USER_DOCUMENT', None)
+mongoengine_user = import_string(mongoengine_document) if mongoengine_document else None
 
 
 class SSOAuthentication(BaseAuthentication):
     token = None
 
     def get_user(self, sso_response):
-        user_model = get_user_model()
         email = sso_response.get('email')
 
-        if issubclass(user_model, Model):
-            return user_model.objects.filter(email=email).first()
+        if mongoengine_user:
+            return mongoengine_user.objects(email=email).first()
         else:
-            return user_model.objects(email=email).first()
+            user_model = get_user_model()
+            return user_model.objects.filter(email=email).first()
 
     def authenticate(self, request, **kwargs):
 

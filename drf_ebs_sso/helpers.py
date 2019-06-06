@@ -12,7 +12,15 @@ from rest_framework.response import Response
 logger = logging.getLogger(__name__)
 
 SSO_HEADER = "Bearer"
-SSO_DOMAIN = settings.SSO_DOMAIN
+SSO_DOMAIN = getattr(settings, 'SSO_DOMAIN', None)
+if not SSO_DOMAIN:
+    raise Exception(_('Please specify in settings SSO_DOMAIN variable with host of SSO service'))
+
+SSO_SERVICE_TOKEN = getattr(settings, 'SSO_SERVICE_TOKEN', None)
+if not SSO_SERVICE_TOKEN:
+    raise Exception(_('Please specify in settings SSO_SERVICE_TOKEN variable with secret token of SSO service'))
+
+SSO_TOKEN_PREFIX = getattr(settings, 'SSO_TOKEN_PREFIX', 'Token')
 
 # SSO_DOMAIN = 'http://127.0.0.1:8000'
 AUTH_PATH_SITE = join_url(SSO_DOMAIN, "authorization/token/service/verify/")
@@ -28,7 +36,7 @@ CONFIRM_RESTORE_PATH_SITE = join_url(SSO_DOMAIN, "account/confirm-restore/")
 
 def get_token(request):
     authorization = request.META.get('HTTP_AUTHORIZATION', "")
-    if authorization.startswith('Token'):
+    if authorization.startswith(SSO_TOKEN_PREFIX):
         return authorization.split(" ")[-1]
 
 
@@ -47,7 +55,7 @@ def get_sso_user(request):
     token = get_token(request)
     if token:
         response = get_sso_response(AUTH_PATH_SITE, requests.post,
-                                    {"token": token, "service_token": settings.AUTH_SERVICE_TOKEN},
+                                    {"token": token, "service_token": SSO_SERVICE_TOKEN},
                                     headers={"Accept-Language": request.LANGUAGE_CODE})
         if response.status_code == status.HTTP_200_OK:
             data = response.data
@@ -68,44 +76,44 @@ def change_password(request, data):
 def sso_login(username, password, lang=settings.LANGUAGE_CODE):
     response = get_sso_response(LOGIN_PATH_SITE, requests.post,
                                 {"username": username, "password": password,
-                                 "service_token": settings.AUTH_SERVICE_TOKEN},
+                                 "service_token": SSO_SERVICE_TOKEN},
                                 headers={"Accept-Language": lang})
     return response
 
 
 def create_sso_user(lang=settings.LANGUAGE_CODE, **kwargs):
-    kwargs["service_token"] = settings.AUTH_SERVICE_TOKEN
+    kwargs["service_token"] = SSO_SERVICE_TOKEN
     # kwargs["redirect_url"] = settings.AUTH_REDIRECT_URL
     response = get_sso_response(CREATE_PATH_SITE, requests.post, kwargs, headers={"Accept-Language": lang})
     return response
 
 
 def create_activated_user(lang=settings.LANGUAGE_CODE, **kwargs):
-    kwargs["service_token"] = settings.AUTH_SERVICE_TOKEN
+    kwargs["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(CREATE_ACTIVATED_PATH_SITE, requests.post, kwargs, headers={"Accept-Language": lang})
     return response
 
 
 def confirm_restore_sso_user(lang=settings.LANGUAGE_CODE, **kwargs):
-    kwargs["service_token"] = settings.AUTH_SERVICE_TOKEN
+    kwargs["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(CONFIRM_RESTORE_PATH_SITE, requests.post, kwargs, headers={"Accept-Language": lang})
     return response
 
 
 def restore_sso_user(lang=settings.LANGUAGE_CODE, **kwargs):
-    kwargs["service_token"] = settings.AUTH_SERVICE_TOKEN
+    kwargs["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(RESTORE_PATH_SITE, requests.post, kwargs, headers={"Accept-Language": lang})
     return response
 
 
 def refresh_token(data, lang=settings.LANGUAGE_CODE):
-    data["service_token"] = settings.AUTH_SERVICE_TOKEN
+    data["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(AUTH_REFRESH, requests.post, data, headers={"Accept-Language": lang})
     return response
 
 
 def firebase_check(data, lang=settings.LANGUAGE_CODE):
-    data["service_token"] = settings.AUTH_SERVICE_TOKEN
+    data["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(FIREBASE_CHECK, requests.post, data, headers={"Accept-Language": lang})
     return response
 
