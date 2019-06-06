@@ -1,4 +1,4 @@
-# Integration of EBS SOO in Django Rest Framework 
+# Integration of EBS SSO in Django Rest Framework 
 
 A set of views, backends for authorization with SSO
 
