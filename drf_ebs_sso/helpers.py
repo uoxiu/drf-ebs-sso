@@ -32,6 +32,7 @@ CREATE_PATH_SITE = join_url(SSO_DOMAIN, "authorization/user/create/")
 CREATE_ACTIVATED_PATH_SITE = join_url(SSO_DOMAIN, "authorization/user/create-activated/")
 RESTORE_PATH_SITE = join_url(SSO_DOMAIN, "authorization/user/restore/")
 CONFIRM_RESTORE_PATH_SITE = join_url(SSO_DOMAIN, "account/confirm-restore/")
+ACCOUNT_CONFIRM = join_url(SSO_DOMAIN, "account/confirm/")
 
 
 def get_token(request):
@@ -40,9 +41,9 @@ def get_token(request):
         return authorization.split(" ")[-1]
 
 
-def get_sso_response(url, function_method, data={}, headers={}):
+def get_sso_response(url, function_method, data={}, headers={}, params=None):
     try:
-        request = function_method(url, json=data, headers=headers)
+        request = function_method(url, json=data, headers=headers, params=params)
         response = Response(request.json(), status=request.status_code)
     except (requests.exceptions.RequestException, JSONDecodeError):
         logger.warning("Response error from: %s", url)
@@ -109,6 +110,11 @@ def restore_sso_user(lang=settings.LANGUAGE_CODE, **kwargs):
 def refresh_token(data, lang=settings.LANGUAGE_CODE):
     data["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(AUTH_REFRESH, requests.post, data, headers={"Accept-Language": lang})
+    return response
+
+
+def confirm_account_sso_user(params, lang=settings.LANGUAGE_CODE):
+    response = get_sso_response(ACCOUNT_CONFIRM, requests.get, params=params, headers={"Accept-Language": lang})
     return response
 
 

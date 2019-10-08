@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='drf_ebs_sso',
-    version='0.0.1',
+    version='0.0.2',
     description='Integration of EBS SOO in Django Rest Framework',
     long_description=long_description,
     long_description_content_type="text/markdown",
