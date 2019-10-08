@@ -3,8 +3,8 @@ from json import JSONDecodeError
 
 import requests
 from django.conf import settings
-from drf_util.utils import join_url
 from django.utils.translation import gettext as _
+from drf_util.utils import join_url
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
@@ -33,6 +33,7 @@ CREATE_ACTIVATED_PATH_SITE = join_url(SSO_DOMAIN, "authorization/user/create-act
 RESTORE_PATH_SITE = join_url(SSO_DOMAIN, "authorization/user/restore/")
 CONFIRM_RESTORE_PATH_SITE = join_url(SSO_DOMAIN, "account/confirm-restore/")
 ACCOUNT_CONFIRM = join_url(SSO_DOMAIN, "account/confirm/")
+DELETE_USER = join_url(SSO_DOMAIN, "authorization/user/delete-account/")
 
 
 def get_token(request):
@@ -121,6 +122,13 @@ def confirm_account_sso_user(params, lang=settings.LANGUAGE_CODE):
 def firebase_check(data, lang=settings.LANGUAGE_CODE):
     data["service_token"] = SSO_SERVICE_TOKEN
     response = get_sso_response(FIREBASE_CHECK, requests.post, data, headers={"Accept-Language": lang})
+    return response
+
+
+def delete_user(request, lang=settings.LANGUAGE_CODE):
+    token = get_token(request)
+    data = {"service_token": SSO_SERVICE_TOKEN, "token": token}
+    response = get_sso_response(DELETE_USER, requests.post, data, headers={"Accept-Language": lang})
     return response
 
 
