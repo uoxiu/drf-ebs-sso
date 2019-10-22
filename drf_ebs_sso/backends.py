@@ -22,6 +22,9 @@ class SSOAuthentication(BaseAuthentication):
             user_model = get_user_model()
             return user_model.objects.filter(email=email).first()
 
+    def perform_login(self, request, user):
+        return user
+
     def authenticate(self, request, **kwargs):
 
         self.token = get_token(request)
@@ -31,6 +34,8 @@ class SSOAuthentication(BaseAuthentication):
         if user:
             user_object = self.get_user(user)
             if user_object:
+                user_object = self.perform_login(request, user_object)
+
                 return user_object, self.token
 
         return None
